@@ -1,0 +1,130 @@
+<?php
+$dir = __DIR__ . '/img/naturaleza';
+$webDir = 'img/naturaleza';
+
+$allowed = ['jpg','jpeg','png','webp','gif'];
+$files = [];
+
+if (is_dir($dir)) {
+  foreach (scandir($dir) as $f) {
+    if ($f === '.' || $f === '..') continue;
+    $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION));
+    if (!in_array($ext, $allowed, true)) continue;
+    $files[] = $f;
+  }
+}
+rsort($files);
+?>
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Galería · Naturaleza · Thais Esteve</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#fbfaf7; --soft:#f3f0e8; --text:#1f2320; --muted:#5b615b;
+      --brand:#2f5d50; --brand2:#8aa07a; --line:rgba(0,0,0,.08);
+      --shadow:0 18px 42px rgba(0,0,0,.08); --radius:18px; --radius2:26px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.65;}
+    img{max-width:100%;display:block}
+    a{color:inherit;text-decoration:none}
+    .container{width:min(1120px,92vw);margin:0 auto}
+    header{position:sticky;top:0;z-index:50;backdrop-filter:blur(10px);background:rgba(251,250,247,.75);border-bottom:1px solid var(--line);}
+    .topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 0;gap:16px;}
+    #corporativo{display:flex;align-items:center;gap:12px}
+    #corporativo img{width:44px;height:44px;border-radius:14px;object-fit:cover;box-shadow:0 10px 24px rgba(0,0,0,.08);}
+    .texto{display:flex;flex-direction:column}
+    .t1{font-weight:700;letter-spacing:-0.01em}
+    .t2{font-size:.95rem;color:var(--muted);font-weight:500}
+    nav{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    nav a{padding:8px 10px;border-radius:999px;font-weight:600;color:var(--muted);}
+    nav a:hover{background:rgba(47,93,80,.08);color:var(--text)}
+    .nav-cta{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff !important;}
+    h1{font-family:Fraunces,serif;margin:0 0 10px;line-height:1.15;letter-spacing:-0.02em;font-size:clamp(2rem,3.5vw,2.8rem)}
+    p{margin:0 0 12px;color:var(--muted)}
+    section{padding:54px 0}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border-radius:999px;font-weight:800;border:0;cursor:pointer;transition:filter .2s ease;}
+    .btn-primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;box-shadow:0 14px 30px rgba(47,93,80,.18);}
+    .btn-primary:hover{filter:brightness(.97)}
+    .galeria{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:18px;}
+    .galeria img{width:100%;height:320px;object-fit:cover;border-radius:14px;box-shadow:0 10px 24px rgba(0,0,0,.10);cursor:pointer;transition:transform .25s ease, filter .25s ease;}
+    .galeria img:hover{transform:translateY(-2px);filter:brightness(.98);}
+    .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;padding:18px;z-index:999;}
+    .lightbox.is-open{display:flex}
+    .lightbox img{max-width:min(1100px,94vw);max-height:88vh;border-radius:14px;box-shadow:0 18px 48px rgba(0,0,0,.35);}
+    .lightbox button{position:absolute;top:16px;right:16px;width:44px;height:44px;border-radius:999px;border:0;background:rgba(255,255,255,.15);color:#fff;font-size:28px;cursor:pointer;}
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="container topbar">
+    <div id="corporativo">
+      <img src="img/logo.png" alt="Logo Thais Esteve">
+      <div class="texto">
+        <span class="t1">Thais Esteve</span>
+        <span class="t2">Fotografía · familia y naturaleza</span>
+      </div>
+    </div>
+    <nav>
+      <a href="index.html">Inicio</a>
+      <a href="galeria-familia.php">Familia</a>
+      <a href="galeria-naturaleza.php" class="nav-cta">Naturaleza</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section>
+    <div class="container">
+      <h1>Galería · Naturaleza y paisaje</h1>
+      <p>Haz clic en una foto para verla grande.</p>
+      <a class="btn btn-primary" href="index.html#naturaleza">Volver</a>
+
+      <div class="galeria" aria-label="Galería completa de naturaleza">
+        <?php foreach ($files as $f): ?>
+          <img src="<?= htmlspecialchars($webDir . '/' . $f) ?>" alt="Foto" loading="lazy">
+        <?php endforeach; ?>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="lightbox" id="lightbox" aria-hidden="true">
+  <button id="lightboxClose" aria-label="Cerrar">×</button>
+  <img id="lightboxImg" alt="Vista ampliada">
+</div>
+
+<script>
+  const lb = document.getElementById("lightbox");
+  const lbImg = document.getElementById("lightboxImg");
+  const lbClose = document.getElementById("lightboxClose");
+
+  document.querySelectorAll(".galeria img").forEach(img => {
+    img.addEventListener("click", () => {
+      lbImg.src = img.src;
+      lb.classList.add("is-open");
+      lb.setAttribute("aria-hidden", "false");
+    });
+  });
+
+  function closeLB(){
+    lb.classList.remove("is-open");
+    lb.setAttribute("aria-hidden", "true");
+    lbImg.src = "";
+  }
+
+  lbClose.addEventListener("click", closeLB);
+  lb.addEventListener("click", (e) => { if(e.target === lb) closeLB(); });
+  document.addEventListener("keydown", (e) => { if(e.key === "Escape") closeLB(); });
+</script>
+</body>
+</html>
