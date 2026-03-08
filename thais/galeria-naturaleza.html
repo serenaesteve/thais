@@ -58,7 +58,7 @@
       </div>
     </div>
     <nav>
-      <a href="index.html">Inicio</a>
+      <a href="index2.html">Inicio</a>
       <a href="galeria-familia.html">Familia</a>
       <a href="galeria-naturaleza.html" class="nav-cta">Naturaleza</a>
     </nav>
@@ -70,7 +70,7 @@
     <div class="container">
       <h1>Galería · Naturaleza y paisaje</h1>
       <p>Haz clic en una foto para verla grande.</p>
-      <a class="btn btn-primary" href="index.html#naturaleza">Volver</a>
+      <a class="btn btn-primary" href="index2.html#naturaleza">Volver</a>
 
       <div class="galeria" id="gallery" aria-label="Galería completa de naturaleza"></div>
     </div>
@@ -107,40 +107,13 @@
     lb.setAttribute("aria-hidden", "false");
   }
 
-  function buildImageCandidates(key) {
-    return [
-      `${BUCKET_URL}/${encodeURI(key)}`,
-      `${WORKER_URL}/${encodeURI(key)}`,
-      `${WORKER_URL}?key=${encodeURIComponent(key)}`,
-      `${WORKER_URL}?file=${encodeURIComponent(key)}`,
-      `img/${encodeURI(key)}`
-    ];
-  }
-
-  function setImgWithFallback(img, candidates, index = 0) {
-    if (index >= candidates.length) {
-      img.alt = `${img.alt || "Imagen"} (no disponible)`;
-      img.classList.add("img-error");
-      return;
-    }
-
-    img.onerror = () => setImgWithFallback(img, candidates, index + 1);
-    img.src = candidates[index];
-  }
-
   function normalizeKeys(data) {
     if (Array.isArray(data)) {
-      return data
-        .map(item => typeof item === "string" ? item.trim() : item?.key?.trim())
-        .filter(Boolean);
+      return data.map(item => typeof item === "string" ? item : item?.key).filter(Boolean);
     }
-
     if (data && Array.isArray(data.keys)) {
-      return data.keys
-        .map(item => typeof item === "string" ? item.trim() : item?.key?.trim())
-        .filter(Boolean);
+      return data.keys.map(item => typeof item === "string" ? item : item?.key).filter(Boolean);
     }
-
     return [];
   }
 
@@ -154,7 +127,7 @@
       const allowed = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
 
       const naturalezaKeys = keys
-        .filter(key => key.startsWith(FOLDER))
+        .filter(key => typeof key === 'string' && key.startsWith(FOLDER))
         .filter(key => !key.startsWith(EXCLUDED_FOLDER))
         .filter(key => {
           const ext = key.split('.').pop()?.toLowerCase();
@@ -164,12 +137,9 @@
 
       naturalezaKeys.forEach(key => {
         const img = document.createElement('img');
-        img.alt = key
-          .replace(FOLDER, '')
-          .replace(/\.[^.]+$/, '')
-          .replace(/[-_]/g, ' ');
+        img.src = `${BUCKET_URL}/${key}`;
+        img.alt = key.replace(FOLDER, '').replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
         img.loading = 'lazy';
-        setImgWithFallback(img, buildImageCandidates(key));
 
         img.addEventListener("click", () => {
           openLB(img.src, img.alt);
