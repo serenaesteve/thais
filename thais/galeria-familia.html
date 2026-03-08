@@ -1,20 +1,3 @@
-<?php
-$dir = __DIR__ . '/img/familia';
-$webDir = 'img/familia';
-
-$allowed = ['jpg','jpeg','png','webp','gif'];
-$files = [];
-
-if (is_dir($dir)) {
-  foreach (scandir($dir) as $f) {
-    if ($f === '.' || $f === '..') continue;
-    $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION));
-    if (!in_array($ext, $allowed, true)) continue;
-    $files[] = $f;
-  }
-}
-rsort($files); // muestra primero lo "más nuevo" por nombre
-?>
 <!doctype html>
 <html lang="es">
 <head>
@@ -75,9 +58,9 @@ rsort($files); // muestra primero lo "más nuevo" por nombre
       </div>
     </div>
     <nav>
-      <a href="index.html">Inicio</a>
-      <a href="galeria-familia.php" class="nav-cta">Familia</a>
-      <a href="galeria-naturaleza.php">Naturaleza</a>
+      <a href="index2.html">Inicio</a>
+      <a href="galeria-familia.html" class="nav-cta">Familia</a>
+      <a href="galeria-naturaleza.html">Naturaleza</a>
     </nav>
   </div>
 </header>
@@ -87,13 +70,9 @@ rsort($files); // muestra primero lo "más nuevo" por nombre
     <div class="container">
       <h1>Galería · Familia y personas</h1>
       <p>Haz clic en una foto para verla grande.</p>
-      <a class="btn btn-primary" href="index.html#familia">Volver</a>
+      <a class="btn btn-primary" href="index2.html#familia">Volver</a>
 
-      <div class="galeria" aria-label="Galería completa de familia">
-        <?php foreach ($files as $f): ?>
-          <img src="<?= htmlspecialchars($webDir . '/' . $f) ?>" alt="Foto" loading="lazy">
-        <?php endforeach; ?>
-      </div>
+      <div class="galeria" id="gallery" aria-label="Galería completa de familia"></div>
     </div>
   </section>
 </main>
@@ -104,27 +83,87 @@ rsort($files); // muestra primero lo "más nuevo" por nombre
 </div>
 
 <script>
+  const BUCKET_URL = 'https://pub-647fc1510575425fbbb63e225abb8e5b.r2.dev';
+  const WORKER_URL = 'https://white-violet-e66c.estevefotografia1.workers.dev';
+  const FOLDER = 'familia/';
+  const EXCLUDED_FOLDER = 'familia/destacadas/';
+
   const lb = document.getElementById("lightbox");
   const lbImg = document.getElementById("lightboxImg");
   const lbClose = document.getElementById("lightboxClose");
+  const gallery = document.getElementById("gallery");
 
-  document.querySelectorAll(".galeria img").forEach(img => {
-    img.addEventListener("click", () => {
-      lbImg.src = img.src;
-      lb.classList.add("is-open");
-      lb.setAttribute("aria-hidden", "false");
-    });
-  });
-
-  function closeLB(){
+  function closeLB() {
     lb.classList.remove("is-open");
     lb.setAttribute("aria-hidden", "true");
     lbImg.src = "";
+    lbImg.alt = "";
   }
 
+  function openLB(src, alt) {
+    lbImg.src = src;
+    lbImg.alt = alt || "Vista ampliada";
+    lb.classList.add("is-open");
+    lb.setAttribute("aria-hidden", "false");
+  }
+
+  function normalizeKeys(data) {
+    if (Array.isArray(data)) {
+      return data.map(item => typeof item === "string" ? item : item?.key).filter(Boolean);
+    }
+    if (data && Array.isArray(data.keys)) {
+      return data.keys.map(item => typeof item === "string" ? item : item?.key).filter(Boolean);
+    }
+    return [];
+  }
+
+  fetch(WORKER_URL)
+    .then(async r => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    })
+    .then(data => {
+      const keys = normalizeKeys(data);
+      const allowed = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+
+      const familiaKeys = keys
+        .filter(key => typeof key === 'string' && key.startsWith(FOLDER))
+        .filter(key => !key.startsWith(EXCLUDED_FOLDER))
+        .filter(key => {
+          const ext = key.split('.').pop()?.toLowerCase();
+          return allowed.includes(ext);
+        })
+        .sort((a, b) => a.localeCompare(b, 'es'));
+
+      familiaKeys.forEach(key => {
+        const img = document.createElement('img');
+        img.src = `${BUCKET_URL}/${key}`;
+        img.alt = key.replace(FOLDER, '').replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
+        img.loading = 'lazy';
+
+        img.addEventListener("click", () => {
+          openLB(img.src, img.alt);
+        });
+
+        gallery.appendChild(img);
+      });
+
+      if (familiaKeys.length === 0) {
+        gallery.innerHTML = '<p>No hay fotos disponibles en la carpeta familia.</p>';
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      gallery.innerHTML = '<p>No se pudieron cargar las fotos.</p>';
+    });
+
   lbClose.addEventListener("click", closeLB);
-  lb.addEventListener("click", (e) => { if(e.target === lb) closeLB(); });
-  document.addEventListener("keydown", (e) => { if(e.key === "Escape") closeLB(); });
+  lb.addEventListener("click", (e) => {
+    if (e.target === lb) closeLB();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeLB();
+  });
 </script>
 </body>
 </html>
