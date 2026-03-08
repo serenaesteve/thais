@@ -58,7 +58,7 @@
       </div>
     </div>
     <nav>
-      <a href="index2.html">Inicio</a>
+      <a href="index.html">Inicio</a>
       <a href="galeria-familia.html">Familia</a>
       <a href="galeria-naturaleza.html" class="nav-cta">Naturaleza</a>
     </nav>
@@ -70,7 +70,7 @@
     <div class="container">
       <h1>Galería · Naturaleza y paisaje</h1>
       <p>Haz clic en una foto para verla grande.</p>
-      <a class="btn btn-primary" href="index2.html#naturaleza">Volver</a>
+      <a class="btn btn-primary" href="index.html#naturaleza">Volver</a>
 
       <div class="galeria" id="gallery" aria-label="Galería completa de naturaleza"></div>
     </div>
@@ -83,7 +83,7 @@
 </div>
 
 <script>
-  const BUCKET_URL = 'https://pub-647fc1510575425fbbb63e225abb8e5b.r2.dev';
+  const BUCKET_URL = 'https://white-violet-e66c.estevefotografia1.workers.dev';
   const WORKER_URL = 'https://white-violet-e66c.estevefotografia1.workers.dev';
   const FOLDER = 'naturaleza/';
   const EXCLUDED_FOLDER = 'naturaleza/destacadas/';
@@ -109,11 +109,17 @@
 
   function normalizeKeys(data) {
     if (Array.isArray(data)) {
-      return data.map(item => typeof item === "string" ? item : item?.key).filter(Boolean);
+      return data
+        .map(item => typeof item === "string" ? item.trim() : item?.key?.trim())
+        .filter(Boolean);
     }
+
     if (data && Array.isArray(data.keys)) {
-      return data.keys.map(item => typeof item === "string" ? item : item?.key).filter(Boolean);
+      return data.keys
+        .map(item => typeof item === "string" ? item.trim() : item?.key?.trim())
+        .filter(Boolean);
     }
+
     return [];
   }
 
@@ -127,7 +133,7 @@
       const allowed = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
 
       const naturalezaKeys = keys
-        .filter(key => typeof key === 'string' && key.startsWith(FOLDER))
+        .filter(key => key.startsWith(FOLDER))
         .filter(key => !key.startsWith(EXCLUDED_FOLDER))
         .filter(key => {
           const ext = key.split('.').pop()?.toLowerCase();
@@ -138,7 +144,10 @@
       naturalezaKeys.forEach(key => {
         const img = document.createElement('img');
         img.src = `${BUCKET_URL}/${key}`;
-        img.alt = key.replace(FOLDER, '').replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
+        img.alt = key
+          .replace(FOLDER, '')
+          .replace(/\.[^.]+$/, '')
+          .replace(/[-_]/g, ' ');
         img.loading = 'lazy';
 
         img.addEventListener("click", () => {

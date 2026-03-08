@@ -93,6 +93,7 @@
     }
     .btn-primary:hover{filter:brightness(.97)}
 
+    /* HERO */
     #heroe{
       padding:64px 0 48px;
       background:
@@ -126,6 +127,7 @@
       font-size:.92rem;
     }
 
+    /* About pill */
     .pill-card{
       display:grid;
       grid-template-columns:120px 1fr;
@@ -142,6 +144,7 @@
       border:1px solid rgba(0,0,0,.08);
     }
 
+    /* Section grid */
     .section-grid{
       display:grid;
       grid-template-columns:1fr 1fr;
@@ -153,12 +156,15 @@
       overflow:hidden;
       border:1px solid rgba(0,0,0,.06);
       box-shadow:var(--shadow);
+      min-height:420px;
+      background:rgba(255,255,255,.3);
     }
     .media img{
       height:420px;width:100%;
       object-fit:cover;
     }
 
+    /* Gallery */
     .galeria{
       display:grid;
       grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
@@ -179,6 +185,7 @@
       filter:brightness(.98);
     }
 
+    /* Contact */
     .contact-grid{
       display:grid;
       grid-template-columns:1fr 1.2fr;
@@ -224,6 +231,7 @@
     }
     .help{font-size:.95rem;color:var(--muted);margin-top:10px}
 
+    /* Lightbox */
     .lightbox{
       position:fixed;
       inset:0;
@@ -260,10 +268,12 @@
     @media(max-width:920px){
       .hero-grid,.section-grid,.contact-grid{grid-template-columns:1fr}
       .hero-photo img,.media img{height:340px}
+      .media{min-height:340px}
       .pill-card{grid-template-columns:1fr}
       .form-row{grid-template-columns:1fr}
     }
 
+    /* ===== CONTACTO SIMPLIFICADO (NUEVO) ===== */
     #contacto .contact-grid{
       grid-template-columns:1fr;
       max-width:640px;
@@ -290,6 +300,7 @@
       font-weight:800;
     }
 
+    /* ===== REDES SOCIALES ===== */
     .redes-grid{
       display:grid;
       grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
@@ -360,6 +371,7 @@
 
 <main>
 
+  <!-- HERO -->
   <section id="heroe">
     <div class="container hero-grid">
       <div>
@@ -378,6 +390,7 @@
     </div>
   </section>
 
+  <!-- ABOUT -->
   <section class="soft" id="sobre-mi">
     <div class="container">
       <div class="pill-card">
@@ -393,6 +406,7 @@
     </div>
   </section>
 
+  <!-- FAMILIA -->
   <section id="familia">
     <div class="container section-grid">
       <div>
@@ -411,6 +425,7 @@
     </div>
   </section>
 
+  <!-- NATURALEZA -->
   <section id="naturaleza" class="soft">
     <div class="container section-grid">
       <div class="media" id="destacadas-naturaleza"></div>
@@ -429,6 +444,7 @@
     </div>
   </section>
 
+  <!-- REDES -->
   <section id="redes" class="soft">
     <div class="container">
       <h2 style="text-align:center;margin-bottom:10px;">Redes sociales</h2>
@@ -458,6 +474,7 @@
     </div>
   </section>
 
+  <!-- CONTACTO -->
   <section id="contacto">
     <div class="container contact-grid">
       <form action="https://formspree.io/f/mnjjjazw" method="POST">
@@ -502,6 +519,7 @@
   </div>
 </footer>
 
+<!-- LIGHTBOX -->
 <div class="lightbox" id="lightbox" aria-hidden="true">
   <button id="lightboxClose" aria-label="Cerrar">×</button>
   <img id="lightboxImg" alt="Vista ampliada">
@@ -510,7 +528,7 @@
 <script>
   document.getElementById("year").textContent = new Date().getFullYear();
 
-  const BUCKET_URL = "https://pub-647fc1510575425fbbb63e225abb8e5b.r2.dev";
+  const BUCKET_URL = "https://white-violet-e66c.estevefotografia1.workers.dev";;
   const WORKER_URL = "https://white-violet-e66c.estevefotografia1.workers.dev";
 
   const lb = document.getElementById("lightbox");
@@ -543,13 +561,11 @@
         .map(item => typeof item === "string" ? item.trim() : item?.key?.trim())
         .filter(Boolean);
     }
-
     if (data && Array.isArray(data.keys)) {
       return data.keys
         .map(item => typeof item === "string" ? item.trim() : item?.key?.trim())
         .filter(Boolean);
     }
-
     return [];
   }
 
@@ -575,12 +591,12 @@
     .then((data) => {
       const keys = normalizeKeys(data);
 
-      const familia = keys
+      const familiaDestacadas = keys
         .filter(key => key.startsWith("familia/destacadas/"))
         .filter(isAllowedImage)
         .sort((a, b) => a.localeCompare(b, "es"));
 
-      const naturaleza = keys
+      const naturalezaDestacadas = keys
         .filter(key => key.startsWith("naturaleza/destacadas/"))
         .filter(isAllowedImage)
         .sort((a, b) => a.localeCompare(b, "es"));
@@ -590,38 +606,32 @@
       const naturalezaDestacada = document.getElementById("destacadas-naturaleza");
       const naturalezaGaleria = document.getElementById("naturaleza-galeria");
 
-      if (familia.length > 0) {
+      if (familiaDestacadas.length > 0) {
         familiaDestacada.appendChild(
-          makeImg(`${BUCKET_URL}/${familia[0]}`, "Familia destacada", false)
+          makeImg(`${BUCKET_URL}/${familiaDestacadas[0]}`, "Familia destacada", false)
         );
 
-        familia.slice(1, 8).forEach((key) => {
+        familiaDestacadas.slice(1, 8).forEach((key) => {
           familiaGaleria.appendChild(
             makeImg(`${BUCKET_URL}/${key}`, "Familia")
           );
         });
-      } else {
-        familiaDestacada.innerHTML = '<p>No hay fotos destacadas de familia.</p>';
       }
 
-      if (naturaleza.length > 0) {
+      if (naturalezaDestacadas.length > 0) {
         naturalezaDestacada.appendChild(
-          makeImg(`${BUCKET_URL}/${naturaleza[0]}`, "Naturaleza destacada", false)
+          makeImg(`${BUCKET_URL}/${naturalezaDestacadas[0]}`, "Naturaleza destacada", false)
         );
 
-        naturaleza.slice(1, 6).forEach((key) => {
+        naturalezaDestacadas.slice(1, 6).forEach((key) => {
           naturalezaGaleria.appendChild(
             makeImg(`${BUCKET_URL}/${key}`, "Naturaleza")
           );
         });
-      } else {
-        naturalezaDestacada.innerHTML = '<p>No hay fotos destacadas de naturaleza.</p>';
       }
     })
     .catch((err) => {
-      console.error("Error cargando fotos destacadas:", err);
-      document.getElementById("destacadas-familia").innerHTML = '<p>No se pudieron cargar las fotos.</p>';
-      document.getElementById("destacadas-naturaleza").innerHTML = '<p>No se pudieron cargar las fotos.</p>';
+      console.error("Error cargando fotos del inicio:", err);
     });
 </script>
 
