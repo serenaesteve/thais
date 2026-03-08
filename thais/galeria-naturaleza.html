@@ -83,7 +83,7 @@
 </div>
 
 <script>
-  const BUCKET_URL = 'https://white-violet-e66c.estevefotografia1.workers.dev';
+  const BUCKET_URL = 'https://pub-647fc1510575425fbbb63e225abb8e5b.r2.dev';
   const WORKER_URL = 'https://white-violet-e66c.estevefotografia1.workers.dev';
   const FOLDER = 'naturaleza/';
   const EXCLUDED_FOLDER = 'naturaleza/destacadas/';
@@ -105,6 +105,27 @@
     lbImg.alt = alt || "Vista ampliada";
     lb.classList.add("is-open");
     lb.setAttribute("aria-hidden", "false");
+  }
+
+  function buildImageCandidates(key) {
+    return [
+      `${BUCKET_URL}/${encodeURI(key)}`,
+      `${WORKER_URL}/${encodeURI(key)}`,
+      `${WORKER_URL}?key=${encodeURIComponent(key)}`,
+      `${WORKER_URL}?file=${encodeURIComponent(key)}`,
+      `img/${encodeURI(key)}`
+    ];
+  }
+
+  function setImgWithFallback(img, candidates, index = 0) {
+    if (index >= candidates.length) {
+      img.alt = `${img.alt || "Imagen"} (no disponible)`;
+      img.classList.add("img-error");
+      return;
+    }
+
+    img.onerror = () => setImgWithFallback(img, candidates, index + 1);
+    img.src = candidates[index];
   }
 
   function normalizeKeys(data) {
@@ -143,12 +164,12 @@
 
       naturalezaKeys.forEach(key => {
         const img = document.createElement('img');
-        img.src = `${BUCKET_URL}/${key}`;
         img.alt = key
           .replace(FOLDER, '')
           .replace(/\.[^.]+$/, '')
           .replace(/[-_]/g, ' ');
         img.loading = 'lazy';
+        setImgWithFallback(img, buildImageCandidates(key));
 
         img.addEventListener("click", () => {
           openLB(img.src, img.alt);

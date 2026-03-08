@@ -528,7 +528,7 @@
 <script>
   document.getElementById("year").textContent = new Date().getFullYear();
 
-  const BUCKET_URL = "https://white-violet-e66c.estevefotografia1.workers.dev";;
+  const BUCKET_URL = "https://pub-647fc1510575425fbbb63e225abb8e5b.r2.dev";
   const WORKER_URL = "https://white-violet-e66c.estevefotografia1.workers.dev";
 
   const lb = document.getElementById("lightbox");
@@ -575,12 +575,33 @@
     return allowed.includes(ext);
   }
 
-  function makeImg(src, alt, lazy = true) {
+  function makeImg(key, alt, lazy = true) {
     const img = document.createElement("img");
-    img.src = src;
     img.alt = alt;
     if (lazy) img.loading = "lazy";
+    setImgWithFallback(img, buildImageCandidates(key));
     return img;
+  }
+
+  function buildImageCandidates(key) {
+    return [
+      `${BUCKET_URL}/${encodeURI(key)}`,
+      `${WORKER_URL}/${encodeURI(key)}`,
+      `${WORKER_URL}?key=${encodeURIComponent(key)}`,
+      `${WORKER_URL}?file=${encodeURIComponent(key)}`,
+      `img/${encodeURI(key)}`
+    ];
+  }
+
+  function setImgWithFallback(img, candidates, index = 0) {
+    if (index >= candidates.length) {
+      img.alt = `${img.alt || "Imagen"} (no disponible)`;
+      img.classList.add("img-error");
+      return;
+    }
+
+    img.onerror = () => setImgWithFallback(img, candidates, index + 1);
+    img.src = candidates[index];
   }
 
   fetch(WORKER_URL)
@@ -608,24 +629,24 @@
 
       if (familiaDestacadas.length > 0) {
         familiaDestacada.appendChild(
-          makeImg(`${BUCKET_URL}/${familiaDestacadas[0]}`, "Familia destacada", false)
+          makeImg(familiaDestacadas[0], "Familia destacada", false)
         );
 
         familiaDestacadas.slice(1, 8).forEach((key) => {
           familiaGaleria.appendChild(
-            makeImg(`${BUCKET_URL}/${key}`, "Familia")
+            makeImg(key, "Familia")
           );
         });
       }
 
       if (naturalezaDestacadas.length > 0) {
         naturalezaDestacada.appendChild(
-          makeImg(`${BUCKET_URL}/${naturalezaDestacadas[0]}`, "Naturaleza destacada", false)
+          makeImg(naturalezaDestacadas[0], "Naturaleza destacada", false)
         );
 
         naturalezaDestacadas.slice(1, 6).forEach((key) => {
           naturalezaGaleria.appendChild(
-            makeImg(`${BUCKET_URL}/${key}`, "Naturaleza")
+            makeImg(key, "Naturaleza")
           );
         });
       }
@@ -634,6 +655,5 @@
       console.error("Error cargando fotos del inicio:", err);
     });
 </script>
-
 </body>
 </html>

@@ -524,16 +524,16 @@
   <button id="lightboxClose" aria-label="Cerrar">×</button>
   <img id="lightboxImg" alt="Vista ampliada">
 </div>
-
 <script>
-  document.getElementById("year").textContent = new Date().getFullYear();
-
-  const BUCKET_URL = 'https://white-violet-e66c.estevefotografia1.workers.dev';
-  const WORKER_URL = "https://white-violet-e66c.estevefotografia1.workers.dev";
+  const BUCKET_URL = 'https://pub-647fc1510575425fbbb63e225abb8e5b.r2.dev';
+  const WORKER_URL = 'https://white-violet-e66c.estevefotografia1.workers.dev';
+  const FOLDER = 'familia/';
+  const EXCLUDED_FOLDER = 'familia/destacadas/';
 
   const lb = document.getElementById("lightbox");
   const lbImg = document.getElementById("lightboxImg");
   const lbClose = document.getElementById("lightboxClose");
+  const gallery = document.getElementById("gallery");
 
   function closeLB() {
     lb.classList.remove("is-open");
@@ -542,18 +542,33 @@
     lbImg.alt = "";
   }
 
-  lbClose.addEventListener("click", closeLB);
-  lb.addEventListener("click", (e) => { if (e.target === lb) closeLB(); });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeLB(); });
-
-  document.addEventListener("click", (e) => {
-    const img = e.target.closest(".galeria img, .media img");
-    if (!img) return;
-    lbImg.src = img.src;
-    lbImg.alt = img.alt || "Vista ampliada";
+  function openLB(src, alt) {
+    lbImg.src = src;
+    lbImg.alt = alt || "Vista ampliada";
     lb.classList.add("is-open");
     lb.setAttribute("aria-hidden", "false");
-  });
+  }
+
+  function buildImageCandidates(key) {
+    return [
+      `${BUCKET_URL}/${encodeURI(key)}`,
+      `${WORKER_URL}/${encodeURI(key)}`,
+      `${WORKER_URL}?key=${encodeURIComponent(key)}`,
+      `${WORKER_URL}?file=${encodeURIComponent(key)}`,
+      `img/${encodeURI(key)}`
+    ];
+  }
+
+  function setImgWithFallback(img, candidates, index = 0) {
+    if (index >= candidates.length) {
+      img.alt = `${img.alt || "Imagen"} (no disponible)`;
+      img.classList.add("img-error");
+      return;
+    }
+
+    img.onerror = () => setImgWithFallback(img, candidates, index + 1);
+    img.src = candidates[index];
+  }
 
   function normalizeKeys(data) {
     if (Array.isArray(data)) {
@@ -561,78 +576,66 @@
         .map(item => typeof item === "string" ? item.trim() : item?.key?.trim())
         .filter(Boolean);
     }
+
     if (data && Array.isArray(data.keys)) {
       return data.keys
         .map(item => typeof item === "string" ? item.trim() : item?.key?.trim())
         .filter(Boolean);
     }
+
     return [];
   }
 
-  function isAllowedImage(key) {
-    const allowed = ["jpg", "jpeg", "png", "webp", "gif"];
-    const ext = key.split(".").pop()?.toLowerCase();
-    return allowed.includes(ext);
-  }
-
-  function makeImg(src, alt, lazy = true) {
-    const img = document.createElement("img");
-    img.src = src;
-    img.alt = alt;
-    if (lazy) img.loading = "lazy";
-    return img;
-  }
-
   fetch(WORKER_URL)
-    .then(async (r) => {
+    .then(async r => {
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       return r.json();
     })
-    .then((data) => {
+    .then(data => {
       const keys = normalizeKeys(data);
+      const allowed = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
 
-      const familiaDestacadas = keys
-        .filter(key => key.startsWith("familia/destacadas/"))
-        .filter(isAllowedImage)
-        .sort((a, b) => a.localeCompare(b, "es"));
+      const familiaKeys = keys
+        .filter(key => key.startsWith(FOLDER))
+        .filter(key => !key.startsWith(EXCLUDED_FOLDER))
+        .filter(key => {
+          const ext = key.split('.').pop()?.toLowerCase();
+          return allowed.includes(ext);
+        })
+        .sort((a, b) => a.localeCompare(b, 'es'));
 
-      const naturalezaDestacadas = keys
-        .filter(key => key.startsWith("naturaleza/destacadas/"))
-        .filter(isAllowedImage)
-        .sort((a, b) => a.localeCompare(b, "es"));
+      familiaKeys.forEach(key => {
+        const img = document.createElement('img');
+        img.alt = key
+          .replace(FOLDER, '')
+          .replace(/\.[^.]+$/, '')
+          .replace(/[-_]/g, ' ');
+        img.loading = 'lazy';
+        setImgWithFallback(img, buildImageCandidates(key));
 
-      const familiaDestacada = document.getElementById("destacadas-familia");
-      const familiaGaleria = document.getElementById("familia-galeria");
-      const naturalezaDestacada = document.getElementById("destacadas-naturaleza");
-      const naturalezaGaleria = document.getElementById("naturaleza-galeria");
-
-      if (familiaDestacadas.length > 0) {
-        familiaDestacada.appendChild(
-          makeImg(`${BUCKET_URL}/${familiaDestacadas[0]}`, "Familia destacada", false)
-        );
-
-        familiaDestacadas.slice(1, 8).forEach((key) => {
-          familiaGaleria.appendChild(
-            makeImg(`${BUCKET_URL}/${key}`, "Familia")
-          );
+        img.addEventListener("click", () => {
+          openLB(img.src, img.alt);
         });
-      }
 
-      if (naturalezaDestacadas.length > 0) {
-        naturalezaDestacada.appendChild(
-          makeImg(`${BUCKET_URL}/${naturalezaDestacadas[0]}`, "Naturaleza destacada", false)
-        );
+        gallery.appendChild(img);
+      });
 
-        naturalezaDestacadas.slice(1, 6).forEach((key) => {
-          naturalezaGaleria.appendChild(
-            makeImg(`${BUCKET_URL}/${key}`, "Naturaleza")
-          );
-        });
+      if (familiaKeys.length === 0) {
+        gallery.innerHTML = '<p>No hay fotos disponibles en la carpeta familia.</p>';
       }
     })
     .catch((err) => {
-      console.error("Error cargando fotos del inicio:", err);
+      console.error(err);
+      gallery.innerHTML = '<p>No se pudieron cargar las fotos.</p>';
     });
+
+  lbClose.addEventListener("click", closeLB);
+  lb.addEventListener("click", (e) => {
+    if (e.target === lb) closeLB();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeLB();
+  });
 </script>
 
 </body>
