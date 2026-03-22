@@ -460,12 +460,13 @@
 
   <section id="contacto">
     <div class="container contact-grid">
-      <form action="https://formspree.io/f/mnjjjazw" method="POST">
+      <form id="contactForm" action="https://api.web3forms.com/submit" method="POST">
+        <input type="hidden" name="access_key" value="5dca2129-e28a-4341-b9ee-03471c79a930">
+        <input type="hidden" name="subject" value="Nueva propuesta desde la web">
+        <input type="checkbox" name="botcheck" style="display:none">
+
         <h3 style="margin-bottom:6px;">Contacto</h3>
-        <p>
-          Cuéntame tu idea y te respondo lo antes posible.<br>
-          <a class="contact-email" href="mailto:Estevefotografia1@gmail.com">Estevefotografia1@gmail.com</a>
-        </p>
+        <p>Cuéntame tu idea y te respondo lo antes posible.</p>
 
         <div class="form-row">
           <div>
@@ -479,17 +480,16 @@
         </div>
 
         <label for="telefono">Teléfono</label>
-        <input id="telefono" type="tel" name="telefono" placeholder="+34 ..." required>
+        <input id="telefono" type="tel" name="telefono" placeholder="+34 ...">
 
         <label for="propuesta">Propuesta</label>
         <textarea id="propuesta" name="propuesta" placeholder="Tipo de sesión, fecha, lugar, ideas, etc." required></textarea>
 
-        <input type="hidden" name="_subject" value="Nueva propuesta desde la web">
-        <input type="text" name="_gotcha" style="display:none">
-
         <div style="margin-top:14px;text-align:center;">
-          <button class="btn btn-primary" type="submit">Enviar</button>
+          <button class="btn btn-primary" type="submit" id="submitBtn">Enviar</button>
         </div>
+
+        <div id="formMsg" style="display:none;margin-top:14px;text-align:center;padding:12px;border-radius:12px;font-weight:600;"></div>
       </form>
     </div>
   </section>
@@ -507,6 +507,47 @@
   <img id="lightboxImg" alt="Vista ampliada">
 </div>
 
+<script>
+  const contactForm = document.getElementById("contactForm");
+  const submitBtn = document.getElementById("submitBtn");
+  const formMsg = document.getElementById("formMsg");
+
+  if (contactForm) {
+    contactForm.addEventListener("submit", async function(e) {
+      e.preventDefault();
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Enviando...";
+
+      const formData = new FormData(contactForm);
+
+      try {
+        const res = await fetch("https://api.web3forms.com/submit", {
+          method: "POST",
+          body: formData
+        });
+        const json = await res.json();
+
+        if (json.success) {
+          formMsg.style.display = "block";
+          formMsg.style.background = "rgba(47,93,80,.10)";
+          formMsg.style.color = "var(--brand)";
+          formMsg.textContent = "¡Mensaje enviado! Te respondo lo antes posible 🌿";
+          contactForm.reset();
+          submitBtn.textContent = "Enviado ✓";
+        } else {
+          throw new Error("Error en el envío");
+        }
+      } catch {
+        formMsg.style.display = "block";
+        formMsg.style.background = "rgba(200,50,50,.08)";
+        formMsg.style.color = "#a33";
+        formMsg.textContent = "Algo salió mal. Prueba de nuevo o escríbeme directamente.";
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Enviar";
+      }
+    });
+  }
+</script>
 <script>
   document.getElementById("year").textContent = new Date().getFullYear();
 
@@ -619,11 +660,4 @@
       }
     })
     .catch((err) => {
-      console.error("Error cargando fotos destacadas:", err);
-      document.getElementById("destacadas-familia").innerHTML = '<p>No se pudieron cargar las fotos.</p>';
-      document.getElementById("destacadas-naturaleza").innerHTML = '<p>No se pudieron cargar las fotos.</p>';
-    });
-</script>
-
-</body>
-</html>
+      console.error("Error cargando fotos destacadas:",
