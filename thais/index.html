@@ -508,47 +508,6 @@
 </div>
 
 <script>
-  const contactForm = document.getElementById("contactForm");
-  const submitBtn = document.getElementById("submitBtn");
-  const formMsg = document.getElementById("formMsg");
-
-  if (contactForm) {
-    contactForm.addEventListener("submit", async function(e) {
-      e.preventDefault();
-      submitBtn.disabled = true;
-      submitBtn.textContent = "Enviando...";
-
-      const formData = new FormData(contactForm);
-
-      try {
-        const res = await fetch("https://api.web3forms.com/submit", {
-          method: "POST",
-          body: formData
-        });
-        const json = await res.json();
-
-        if (json.success) {
-          formMsg.style.display = "block";
-          formMsg.style.background = "rgba(47,93,80,.10)";
-          formMsg.style.color = "var(--brand)";
-          formMsg.textContent = "¡Mensaje enviado! Te respondo lo antes posible 🌿";
-          contactForm.reset();
-          submitBtn.textContent = "Enviado ✓";
-        } else {
-          throw new Error("Error en el envío");
-        }
-      } catch {
-        formMsg.style.display = "block";
-        formMsg.style.background = "rgba(200,50,50,.08)";
-        formMsg.style.color = "#a33";
-        formMsg.textContent = "Algo salió mal. Prueba de nuevo o escríbeme directamente.";
-        submitBtn.disabled = false;
-        submitBtn.textContent = "Enviar";
-      }
-    });
-  }
-</script>
-<script>
   document.getElementById("year").textContent = new Date().getFullYear();
 
   const BUCKET_URL = "https://pub-647fc1510575425fbbb63e225abb8e5b.r2.dev";
@@ -660,4 +619,11 @@
       }
     })
     .catch((err) => {
-      console.error("Error cargando fotos destacadas:",
+      console.error("Error cargando fotos destacadas:", err);
+      document.getElementById("destacadas-familia").innerHTML = '<p>No se pudieron cargar las fotos.</p>';
+      document.getElementById("destacadas-naturaleza").innerHTML = '<p>No se pudieron cargar las fotos.</p>';
+    });
+</script>
+
+</body>
+</html>
